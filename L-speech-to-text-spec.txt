@@ -1,0 +1,151 @@
+# -*- mode: python ; coding: utf-8 -*-
+"""
+PyInstaller Spec File for L-speech-to-text
+===========================================
+
+This spec file configures PyInstaller to bundle the L-speech-to-text application
+into a standalone executable with all required dependencies.
+
+Key configurations:
+- Hidden imports for pyautogui dependencies (pyscreeze, pymsgbox, mouseinfo, PIL)
+- Hidden imports for requests/certifi (HTTPS certificate verification)
+- Binary includes for sounddevice (PortAudio DLL)
+- Console mode enabled (can be changed to windowed if desired)
+
+Build command:
+    pyinstaller L-speech-to-text.spec
+
+Requirements:
+- Run with administrator privileges (required for keyboard hooks)
+- Ensure all dependencies in requirements.txt are installed
+- Set OPENAI_API_KEY environment variable before running
+
+Author: Generated for L-speech-to-text project
+"""
+
+block_cipher = None
+
+# Define hidden imports required by dependencies
+hidden_imports = [
+    # PyAutoGUI dependencies (required for clipboard paste functionality)
+    'pyscreeze',
+    'pymsgbox',
+    'mouseinfo',
+    'PIL',
+    'PIL._imagingtk',
+    'PIL._tkinter_finder',
+    # Requests/certifi for HTTPS certificate verification
+    'certifi',
+    # Other potential hidden imports
+    'numpy',
+    'soundfile',
+    'sounddevice',
+    # Common modules
+    'common',
+    'common.config',
+    'common.config.config_app',
+    'common.logging_utils',
+    'common.logging_utils.logging_config',
+    'common.utils',
+    'common.utils.file_sys_utils',
+    'common.utils.paste_from_clipboard',
+    # Application modules from src/ directory
+    'src',
+    'src.check_dependencies',
+    'src.recorder',
+    'src.recorder.record',
+    'src.recorder.record_cli',
+    'src.recorder.configs',
+    'src.recorder.configs.recorder_config',
+    'src.transcriber',
+    'src.transcriber.transcribe',
+    'src.transcriber.transcribe_cli',
+    'src.transcriber.configs',
+    'src.transcriber.configs.transcribe_config',
+    'src.hotkey_detect',
+    'src.hotkey_detect.hotkey_detector',
+    'src.hotkey_detect.configs',
+    'src.hotkey_detect.configs.hotkey_config',
+    # Also add versions without src prefix (since main.py adds src to path)
+    'recorder',
+    'recorder.record',
+    'recorder.record_cli',
+    'recorder.configs',
+    'recorder.configs.recorder_config',
+    'transcriber',
+    'transcriber.transcribe',
+    'transcriber.transcribe_cli',
+    'transcriber.configs',
+    'transcriber.configs.transcribe_config',
+    'hotkey_detect',
+    'hotkey_detect.hotkey_detector',
+    'hotkey_detect.configs',
+    'hotkey_detect.configs.hotkey_config',
+    'check_dependencies',
+]
+
+import os
+from PyInstaller.utils.hooks import collect_all
+
+spec_root = os.path.abspath(SPECPATH)
+
+# Collect all data files from common directory (configs, etc.)
+common_datas = []
+common_path = os.path.join(spec_root, 'common')
+for root, dirs, files in os.walk(common_path):
+    for file in files:
+        if file.endswith('.py'):
+            continue  # Python files are handled by Analysis
+        if file.endswith('.json') or file.endswith('.yaml') or file.endswith('.yml'):
+            src_file = os.path.join(root, file)
+            rel_path = os.path.relpath(root, spec_root)
+            common_datas.append((src_file, rel_path))
+
+a = Analysis(
+    ['main.py'],
+    pathex=[os.path.join(spec_root, 'src')],  # Add src directory to Python path
+    binaries=[],
+    datas=common_datas,
+    hiddenimports=hidden_imports,
+    hookspath=[],
+    hooksconfig={},
+    runtime_hooks=[],
+    excludes=[],
+    win_no_prefer_redirects=False,
+    win_private_assemblies=False,
+    cipher=block_cipher,
+    noarchive=False,
+)
+
+pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
+
+exe = EXE(
+    pyz,
+    a.scripts,
+    [],
+    exclude_binaries=True,
+    name='L-speech-to-text',
+    debug=False,
+    bootloader_ignore_signals=False,
+    strip=False,
+    upx=True,
+    console=True,  # Set to False for windowed mode (no console window)
+    disable_windowed_traceback=False,
+    argv_emulation=False,
+    target_arch=None,
+    codesign_identity=None,
+    entitlements_file=None,
+    icon=None,  # Add icon path here if desired: icon='path/to/icon.ico'
+)
+
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.zipfiles,
+    a.datas,
+    strip=False,
+    upx=True,
+    upx_exclude=[],
+    name='L-speech-to-text',
+)
+
