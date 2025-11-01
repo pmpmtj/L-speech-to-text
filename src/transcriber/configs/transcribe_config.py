@@ -8,6 +8,7 @@ Note: OPENAI_API_KEY must be set as an environment variable and will be
 validated when the Transcriber class is initialized.
 """
 
+import os
 from dataclasses import dataclass
 from typing import Literal
 
@@ -33,6 +34,21 @@ class TranscribeConfig:
     prompt: str = ""
     temperature: float = 0.0
     response_format: Literal["text", "json"] = "text"
+    
+    def __post_init__(self):
+        """Load configuration from environment variables if available."""
+        # Load language from environment variable (priority 1)
+        env_language = os.environ.get("TRANSCRIBE_LANGUAGE")
+        if env_language is not None:
+            self.language = env_language
+        
+        # Load model from environment variable (priority 1)
+        env_model = os.environ.get("TRANSCRIBE_MODEL")
+        if env_model is not None:
+            self.model = env_model
+        
+        # Note: .env file loading would happen here if implemented (priority 2)
+        # Default values from dataclass fields are priority 3
 
 
 # Default configuration instance

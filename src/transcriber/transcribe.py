@@ -17,17 +17,13 @@ class Transcriber:
     def __init__(self):
         # Set up logger for the transcribe module
         self.logger = get_logger("transcriber")
-        self.logger.debug("Loading transcription configuration")
+        self.logger.debug("Initializing transcriber")
         
-        # Load configuration from Python config module
+        # Load static configuration values (timeout and max_retries)
+        # These are set once at initialization and don't need to be dynamic
         cfg = config
-        self.model = cfg.model
         self.timeout = cfg.timeout
         self.max_retries = cfg.max_retries
-        self.language = cfg.language
-        self.prompt = cfg.prompt
-        self.temperature = cfg.temperature
-        self.response_format = cfg.response_format
         
         # Load API key from environment - FAIL FAST if missing
         self.api_key = os.environ.get("OPENAI_API_KEY")
@@ -36,7 +32,9 @@ class Transcriber:
             self.logger.error(error_msg)
             raise EnvironmentError(error_msg)
         
-        self.logger.debug(f"Transcriber initialized with model: {self.model}")
+        # Dynamic config values (model, language, temperature, prompt, response_format)
+        # will be read fresh from config on each transcribe() call
+        self.logger.debug("Transcriber initialized (dynamic config values will be read on each transcription)")
 
     def transcribe(self, audio_bytes):
         """
@@ -73,12 +71,41 @@ class Transcriber:
             except Exception as e:
                 self.logger.warning(f"Failed to save debug audio: {e}")
         
+        # Read dynamic config values fresh from config on each call
+        # This allows runtime configuration changes without restarting the application
+        cfg = config
+        
+        # Try to read from runtime config file if it exists
+        runtime_config_path = Path(__file__).resolve().parent.parent.parent / "runtime_config.json"
+        if runtime_config_path.exists():
+            try:
+                import json
+                with open(runtime_config_path, 'r') as f:
+                    runtime_cfg = json.load(f)
+                model = runtime_cfg.get("transcription", {}).get("model", cfg.model)
+                language = runtime_cfg.get("transcription", {}).get("language", cfg.language)
+                self.logger.debug(f"Loaded runtime config from {runtime_config_path}")
+            except Exception as e:
+                self.logger.warning(f"Failed to read runtime config, using defaults: {e}")
+                model = cfg.model
+                language = cfg.language
+        else:
+            model = cfg.model
+            language = cfg.language
+        
+        # Other config values from dataclass
+        prompt = cfg.prompt
+        temperature = cfg.temperature
+        response_format = cfg.response_format
+        
+        self.logger.debug(f"Reading config dynamically - model: {model}, language: {language}")
+        
         data = {
-            "model": self.model,
-            "language": self.language,
-            "prompt": self.prompt,
-            "temperature": self.temperature,
-            "response_format": self.response_format,
+            "model": model,
+            "language": language,
+            "prompt": prompt,
+            "temperature": temperature,
+            "response_format": response_format,
         }
         
         self.logger.debug(f"API request details:")
@@ -115,7 +142,7 @@ class Transcriber:
                 # Log the full raw response for debugging
                 self.logger.debug(f"Raw API response: {response.text}")
                 
-                if self.response_format == "json":
+                if response_format == "json":
                     result = response.json()
                     text = result.get("text", "")
                     self.logger.debug(f"Parsed JSON response: {result}")

@@ -60,7 +60,7 @@ class HotkeyDetector:
             })
         
         # Set minimum recording duration (discard recordings shorter than this)
-        self.min_duration = 2.0  # seconds
+        self.min_duration = 1.25  # seconds
         
         # Initialize state variables
         self.pressed_keys = set()
