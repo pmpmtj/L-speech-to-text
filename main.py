@@ -14,6 +14,9 @@ Or to run dependency checks:
 
 import sys
 import argparse
+import threading
+import subprocess
+import time
 from pathlib import Path
 
 # Add src to path for imports
@@ -44,6 +47,58 @@ except Exception as e:
     print("="*70)
     input("\n\nPress ENTER to exit...")
     sys.exit(1)
+
+
+def start_django_server():
+    """
+    Start the Django web dashboard server in a background thread.
+    
+    This function runs the Django development server on port 8030
+    to provide a web interface for changing settings on the fly.
+    """
+    try:
+        logger.info("Starting Django web dashboard on port 8030")
+        print("Starting Django web dashboard on http://localhost:8030")
+        
+        # Get the path to the Django manage.py script
+        django_dir = Path(__file__).parent / "web_dashboard"
+        manage_py = django_dir / "manage.py"
+        
+        if not manage_py.exists():
+            logger.warning(f"Django manage.py not found at {manage_py}")
+            print("Warning: Django dashboard not available (manage.py not found)")
+            return
+        
+        # Start Django server as a subprocess
+        # Using creationflags on Windows to prevent showing a separate console window
+        import platform
+        if platform.system() == "Windows":
+            # On Windows, hide the Django server console
+            subprocess.Popen(
+                [sys.executable, str(manage_py), "runserver", "8030", "--noreload"],
+                cwd=str(django_dir),
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                creationflags=subprocess.CREATE_NO_WINDOW
+            )
+        else:
+            # On Linux/Mac
+            subprocess.Popen(
+                [sys.executable, str(manage_py), "runserver", "8030", "--noreload"],
+                cwd=str(django_dir),
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+        
+        # Give Django a moment to start
+        time.sleep(2)
+        logger.info("Django web dashboard started successfully")
+        print("Dashboard ready at http://localhost:8030\n")
+        
+    except Exception as e:
+        logger.error(f"Failed to start Django server: {e}")
+        print(f"Warning: Could not start Django dashboard: {e}")
+        print("The application will continue without the web dashboard.\n")
 
 
 def parse_args():
@@ -90,6 +145,9 @@ def main():
         else:
             logger.info("Skipping dependency checks by default")
             print("\nSkipping dependency checks (run with --apply-checks to verify dependencies)...\n")
+        
+        # Start Django web dashboard
+        start_django_server()
         
         # Start the hotkey detector
         logger.info("Initializing hotkey detector")

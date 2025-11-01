@@ -7,6 +7,8 @@ A Python-based speech-to-text application that records audio via hotkey press, t
 - **Hotkey Recording**: Press and hold a configurable hotkey combination to record audio
 - **Automatic Transcription**: Uses OpenAI Whisper API for accurate transcription
 - **Auto-Paste**: Automatically pastes transcribed text at cursor position
+- **Web Dashboard**: Beautiful web interface on port 3000 for changing settings on the fly
+- **Real-Time Configuration**: Change language, model, and timestamp settings without restart
 - **Memory-Only Recording**: Audio is processed in memory without saving to disk
 - **Configurable**: Python-based configurations with dataclasses
 - **Cross-Platform**: Works on Windows, macOS, and Linux
@@ -78,6 +80,24 @@ Run the application (dependency checks are skipped by default):
 ```bash
 python main.py
 ```
+
+The application will:
+1. Start the Django web dashboard on http://localhost:8030
+2. Initialize the hotkey detector
+3. Begin listening for your hotkey combination (default: Ctrl+Alt)
+
+### Web Dashboard
+
+Access the settings dashboard at **http://localhost:8030** in your browser.
+
+The dashboard allows you to change settings on the fly:
+- **Language**: Select transcription language (en, pt, es, fr, de, it)
+- **Model**: Choose OpenAI model (whisper-1, gpt-4o-transcribe, gpt-4o-mini-transcribe)
+- **Timestamp**: Toggle timestamp prefix on transcribed text
+
+Changes take effect immediately on the next transcription!
+
+See `web_dashboard/README.md` for detailed dashboard documentation.
 
 ### Run with Dependency Checks
 

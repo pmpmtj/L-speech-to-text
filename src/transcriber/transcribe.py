@@ -77,19 +77,30 @@ class Transcriber:
         
         # Try to read from runtime config file if it exists
         runtime_config_path = Path(__file__).resolve().parent.parent.parent / "runtime_config.json"
+        print(f"\n[CONFIG] Looking for runtime config at: {runtime_config_path}")
+        self.logger.debug(f"Looking for runtime config at: {runtime_config_path}")
+        
         if runtime_config_path.exists():
             try:
                 import json
-                with open(runtime_config_path, 'r') as f:
+                with open(runtime_config_path, 'r', encoding='utf-8') as f:
                     runtime_cfg = json.load(f)
                 model = runtime_cfg.get("transcription", {}).get("model", cfg.model)
                 language = runtime_cfg.get("transcription", {}).get("language", cfg.language)
+                print(f"[CONFIG] Runtime config loaded successfully")
+                print(f"[CONFIG] Language: {language}")
+                print(f"[CONFIG] Model: {model}")
                 self.logger.debug(f"Loaded runtime config from {runtime_config_path}")
+                self.logger.debug(f"Runtime config values - language: {language}, model: {model}")
             except Exception as e:
+                print(f"[CONFIG] ERROR: Failed to read runtime config: {e}")
+                print(f"[CONFIG] Using default values - language: {cfg.language}, model: {cfg.model}")
                 self.logger.warning(f"Failed to read runtime config, using defaults: {e}")
                 model = cfg.model
                 language = cfg.language
         else:
+            print(f"[CONFIG] Runtime config file not found")
+            print(f"[CONFIG] Using default values - language: {cfg.language}, model: {cfg.model}")
             model = cfg.model
             language = cfg.language
         
@@ -107,6 +118,10 @@ class Transcriber:
             "temperature": temperature,
             "response_format": response_format,
         }
+        
+        print(f"[API] Preparing request to OpenAI Whisper API")
+        print(f"[API] Language parameter: '{language}'")
+        print(f"[API] Model parameter: '{model}'")
         
         self.logger.debug(f"API request details:")
         self.logger.debug(f"URL: {url}")
