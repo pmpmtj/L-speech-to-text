@@ -30,7 +30,7 @@ class TranscribeConfig:
     model: str = "whisper-1"
     timeout: int = 30
     max_retries: int = 3
-    language: str = "pt"
+    language: str = "en"
     prompt: str = ""
     temperature: float = 0.0
     response_format: Literal["text", "json"] = "text"
