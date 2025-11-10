@@ -26,7 +26,7 @@ class Transcriber:
         self.max_retries = cfg.max_retries
         
         # Load API key from environment - FAIL FAST if missing
-        self.api_key = os.environ.get("OPENAI_API_KEY")
+        self.api_key = os.environ.get("OPENAI_API_KEY_STT")
         if not self.api_key:
             error_msg = "OPENAI_API_KEY environment variable is not set. Please set it before running the application."
             self.logger.error(error_msg)
